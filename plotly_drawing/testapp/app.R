@@ -1,18 +1,29 @@
 library(shiny)
 
 ui <- fluidPage(
-  dateRangeInput("inDateRange", "Date range input:", 
-                 start="2018-05-19",
-                 end="2019-05-19"),
-  plotlyOutput("p"),
-  verbatimTextOutput("info"),
-  verbatimTextOutput("clicks")
+  sidebarPanel(
+    dateRangeInput("inDateRange", "Date range input:", 
+                   start="2018-05-19",
+                   end="2019-05-19"),
+    verbatimTextOutput("info"),
+    verbatimTextOutput("clicks"),
+    h3("manual line entry:"),
+    dateRangeInput("lineDrawDateRange", "Date range input:", 
+                   start="2018-05-19",
+                   end="2019-05-19"),
+    numericInput("y0", label="y0", value=3),
+    numericInput("y1", label="y1", value=3),
+    actionButton("addLine", "Add Line")
+  ),
+  mainPanel(
+    plotlyOutput("p")
+  )
 )
 
 server <- function(input, output, session) {
   load('w.ws.RData')
   
-  lines <- list(
+  examples <- list(
     list(
       text = "hot",
       x = 0.5, 
@@ -29,6 +40,8 @@ server <- function(input, output, session) {
       yref = "paper"
     )
   )
+
+  values <- reactiveValues(val=NULL, lines=list())
   
   reactiveMaster <- reactive({
     dat <- w.ws %>% 
@@ -45,7 +58,8 @@ server <- function(input, output, session) {
             low=~Low,
             close=~Settle) %>%
       layout(
-        annotations = lines) %>%
+        annotations = examples,
+        shapes = values$lines) %>%
       config(editable = TRUE)
   })
   
@@ -54,6 +68,20 @@ server <- function(input, output, session) {
   })
   output$clicks <- renderPrint({
     event_data("plotly_click")
+  })
+  
+  observeEvent(input$addLine, {
+    l <- list(
+      type='line',
+      x0 = input$lineDrawDateRange[1], 
+      x1 =input$lineDrawDateRange[2],
+      y0 = input$y0,
+      y1 = input$y1,
+      xref='x',yref='y',
+      line=list(color='green',width=0.5))
+    print("defo clicked the button")
+    values$lines <- append(values$lines, l)
+    print(values$lines)
   })
   
 }
