@@ -13,7 +13,9 @@ ui <- fluidPage(
                    end="2019-05-19"),
     numericInput("y0", label="y0", value=3),
     numericInput("y1", label="y1", value=3),
-    actionButton("addLine", "Add Line")
+    actionButton("addLine", "Add Line From Values Above"),
+    actionButton("addLineDrag", "Add line by clicking"),
+    actionButton("testbutton", "Test dat button")
   ),
   mainPanel(
     plotlyOutput("p")
@@ -82,6 +84,24 @@ server <- function(input, output, session) {
     print("defo clicked the button")
     values$lines <- append(values$lines, l)
     print(values$lines)
+  })
+  
+  observeEvent(input$addLineDrag, {
+    # wait for first  click
+    # wait for second click
+    # draw dat line
+  })
+  
+  observeEvent(input$testbutton, {
+    examples <- append(examples, 
+      list(
+        text = "SO HOT",
+        x = 0.5, 
+        y = 0.5, 
+        xref = "paper",
+        yref = "paper",
+        showarrow = FALSE
+      ))
   })
   
 }
