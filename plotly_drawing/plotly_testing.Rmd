@@ -248,7 +248,6 @@ lines[[i]] <- list(
 
 
 lines=list(l1,l2)
-lines = append(lines)
 
 t <- layout(fig, title = 'changing?? with Lines', shapes=lines)
 t
