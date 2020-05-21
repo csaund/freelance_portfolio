@@ -1,6 +1,6 @@
 ## Interactive Plotly Drawing
 - :white_check_mark: Be able to interactively draw lines on plotly subplots with various custom inputs (color, xstart/end, ystart/end, width).
-- :radio_button: Draw lines on multiple subplots at once
+- :white_check_mark: Draw lines on multiple subplots at once
 - :white_check_mark: Move lines around on subplot (until re-render)
 
 
