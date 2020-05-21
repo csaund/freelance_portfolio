@@ -59,6 +59,7 @@ load data
             y=~us10y.f.d5.suw,
             type='scatter',
             mode='lines+markers')
+  
   figp <- us10y.p$cwc$f.d5.w[j:k]  %>%
     plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d5.prw,
@@ -78,108 +79,6 @@ load data
                   shareX=TRUE) %>%
           layout(xaxis=list(rangeslider=list(visible=F)))
 
-  l <- list(
-    list(
-    type='line',
-    x0='2016-04-24', 
-    x1 = '2020-05-18',
-    y0=0.579,
-    y1=4.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5)),
-  list(
-    type='line',
-    x0='2016-04-24', 
-    x1 = '2020-05-18',
-    y0=0.879,
-    y1=0.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5))
-  )
-  
-l1 = list(    
-  type='line',
-    x0='2016-04-24', 
-    x1 = '2020-05-18',
-    y0=0.879,
-    y1=0.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5)
-)
-l2 = list(
-    type='line',
-    x0='2016-04-24', 
-    x1 = '2020-05-18',
-    y0=0.579,
-    y1=4.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5)
-  )
-
-line <- list(
-  type = "line",
-  line = list(color = "pink"),
-  xref = "x",
-  yref = "y"
-)
-
-l1x = list(
-    type='line',
-    x='2016-04-24', 
-    xend = '2020-05-18',
-    y=0.579,
-    yend=4.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5)
-  )
-
-l2x = list(
-    type='line',
-    x='2016-04-24', 
-    xend = '2020-05-18',
-    y=0.579,
-    yend=4.739,
-    xref='x',
-    yref='y',
-    line=list(color='green',width=0.5)
-  )
-
-lines <- list()
-for (i in c(0, 3, 5, 7, 9, 13)) {
-  line[["x0"]] <- i
-  line[["x1"]] <- i + 2
-  line[c("y0", "y1")] <- sin(i + 1)
-  lines <- c(lines, list(line))
-}
-
-vline <- function(color = "red") {
-  list(
-    type = "line", 
-    y0 = 2, 
-    y1 = 4, 
-    yref = "paper",
-    x0 = '2016-04-24', 
-    x1 = '2020-05-18', 
-    line = list(color = color)
-  )
-}
-
-hline <- function(color = "blue") {
-  list(
-    type = "line", 
-    x0 = '2016-04-24', 
-    x1 = '2020-05-18', 
-    xref = "paper",
-    y0 = 5, 
-    y1 = 2, 
-    line = list(color = color)
-  )
-}
 lines_data <- data.frame(x0=c('2016-04-24', '2016-04-24'), x1=c('2018-04-24', '2018-04-24'), y0=c(2,5), y1=c(3,2), xref=c('x','x'), yref=c('y','y'), type=c("line", "line"))
 
 a <- list(

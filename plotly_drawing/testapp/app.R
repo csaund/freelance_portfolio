@@ -8,6 +8,12 @@ ui <- fluidPage(
     verbatimTextOutput("info"),
     verbatimTextOutput("clicks"),
     h3("manual line entry:"),
+    selectInput("line_color", "Line Color:",
+                c("Green" = "green",
+                  "Red" = "red",
+                  "Blue" = "blue",
+                  "Black" = "black"),
+                selected="Green"),
     dateRangeInput("lineDrawDateRange", "Date range input:", 
                    start="2018-05-19",
                    end="2019-05-19"),
@@ -17,7 +23,11 @@ ui <- fluidPage(
     actionButton("addLineDrag", "Add line by clicking")
   ),
   mainPanel(
-    plotlyOutput("p")
+    plotlyOutput("p"),
+    plotlyOutput("figs"),
+    plotlyOutput("figp"),
+    plotlyOutput("figs10"),
+    plotlyOutput("figp10")
   )
 )
 
@@ -25,34 +35,6 @@ server <- function(input, output, session) {
   load('w.ws.RData')
 
   values <- reactiveValues(val=NULL, lines=list())
-  
-  l1 <- list(
-    type='line',
-    x0 = lines_data$x0[2], 
-    x1 = lines_data$x1[2],
-    y0 = lines_data$y0[2],
-    y1 = lines_data$y1[2],
-    xref='x',yref='y',
-    line=list(color='red',width=0.5))
-  l2 <- list(
-    type='line',
-    x0 = lines_data$x0[1], 
-    x1 = lines_data$x1[1],
-    y0 = lines_data$y0[1],
-    y1 = lines_data$y1[1],
-    xref='x',yref='y',
-    line=list(color='green',width=0.5))
-  
-  test_lines <- list(l1, l2)
-  i <- length(test_lines)+1
-  test_lines[[i]] <- list(
-    type='line',
-    x0 = lines_data$x0[1], 
-    x1 = lines_data$x1[1],
-    y0 = lines_data$y0[2],
-    y1 = lines_data$y1[1],
-    xref='x',yref='y',
-    line=list(color='blue',width=0.5))
   
   lines <- reactive({
     print("re-getting lines")
@@ -82,6 +64,36 @@ server <- function(input, output, session) {
         shapes = lines()) %>%
       config(editable = TRUE)
   })
+  # TODO make this inputable
+  j=2600
+  k=2700
+  output$figs <- renderPlotly({
+    us10y.p$cwc$f.d5.w[j:k] %>%
+      plot_ly(x=w.ws[j:k,Date],
+            y=~us10y.f.d5.suw,
+            type='scatter',
+            mode='lines+markers') 
+  })
+  output$figp <- renderPlotly({
+    us10y.p$cwc$f.d5.w[j:k]  %>%
+      plot_ly(x=w.ws[j:k,Date],
+            y=~us10y.f.d5.prw,
+            type='scatter',
+            mode='lines+markers')
+  })
+  output$figs10 <- renderPlotly({
+    us10y.p$cwc$f.d10.w[j:k]  %>%
+      plot_ly(x=w.ws[j:k,Date],
+            y=~us10y.f.d10.suw,
+            type='scatter',
+            mode='lines+markers')
+  })
+  output$figp10 <- renderPlotly({
+    us10y.p$cwc$f.d10.w[j:k]  %>%
+      plot_ly(x=w.ws[j:k,Date],
+            y=~us10y.f.d10.prw,type='scatter',
+            mode='lines+markers')
+  })
   
   output$info <- renderPrint({
     event_data("plotly_relayout")
@@ -100,7 +112,7 @@ server <- function(input, output, session) {
       y0 = input$y0,
       y1 = input$y1,
       xref='x',yref='y',
-      line=list(color='green',width=0.5))
+      line=list(color=input$line_color,width=0.5))
   })
   
   observeEvent(input$addLineDrag, {
