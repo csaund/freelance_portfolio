@@ -13,9 +13,8 @@ ui <- fluidPage(
                    end="2019-05-19"),
     numericInput("y0", label="y0", value=3),
     numericInput("y1", label="y1", value=3),
-    actionButton("addLine", "Add Line From Values Above"),
-    actionButton("addLineDrag", "Add line by clicking"),
-    actionButton("testbutton", "Test dat button")
+    actionButton("addLine", "Add Line Manually"),
+    actionButton("addLineDrag", "Add line by clicking")
   ),
   mainPanel(
     plotlyOutput("p")
@@ -24,35 +23,27 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   load('w.ws.RData')
-  
-  examples <- list(
-    list(
-      text = "hot",
-      x = 0.5, 
-      y = 0.5, 
-      xref = "paper",
-      yref = "paper",
-      showarrow = FALSE
-    ),
-    list(
-      text = "fire",
-      x = 0.5, 
-      y = 0.5, 
-      xref = "paper",
-      yref = "paper"
-    )
-  )
 
   values <- reactiveValues(val=NULL, lines=list())
   
+  lines <- reactive({
+    print("re-getting lines")
+    values$lines
+    print(length(values$lines))
+  })
+
   reactiveMaster <- reactive({
     dat <- w.ws %>% 
       filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
     return(dat)
   })
   
+  p <- reactive({
+    reactiveMaster()
+  })
+  
   output$p <- renderPlotly({
-    plot_ly(reactiveMaster(), 
+    plot_ly(p(), 
             x=~Date,
             type='candlestick',
             open=~Open,
@@ -60,8 +51,7 @@ server <- function(input, output, session) {
             low=~Low,
             close=~Settle) %>%
       layout(
-        annotations = examples,
-        shapes = values$lines) %>%
+        shapes = lines()) %>%
       config(editable = TRUE)
   })
   
@@ -73,7 +63,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLine, {
-    l <- list(
+    lines <- values$lines
+    i <- length(lines)+1
+    lines[[i]] <- list(
       type='line',
       x0 = input$lineDrawDateRange[1], 
       x1 =input$lineDrawDateRange[2],
@@ -81,27 +73,14 @@ server <- function(input, output, session) {
       y1 = input$y1,
       xref='x',yref='y',
       line=list(color='green',width=0.5))
-    print("defo clicked the button")
-    values$lines <- append(values$lines, l)
-    print(values$lines)
+    print("manually adding a line")
+    values$lines <- lines
   })
   
   observeEvent(input$addLineDrag, {
     # wait for first  click
     # wait for second click
     # draw dat line
-  })
-  
-  observeEvent(input$testbutton, {
-    examples <- append(examples, 
-      list(
-        text = "SO HOT",
-        x = 0.5, 
-        y = 0.5, 
-        xref = "paper",
-        yref = "paper",
-        showarrow = FALSE
-      ))
   })
   
 }
