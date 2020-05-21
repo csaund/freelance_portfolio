@@ -26,10 +26,38 @@ server <- function(input, output, session) {
 
   values <- reactiveValues(val=NULL, lines=list())
   
+  l1 <- list(
+    type='line',
+    x0 = lines_data$x0[2], 
+    x1 = lines_data$x1[2],
+    y0 = lines_data$y0[2],
+    y1 = lines_data$y1[2],
+    xref='x',yref='y',
+    line=list(color='red',width=0.5))
+  l2 <- list(
+    type='line',
+    x0 = lines_data$x0[1], 
+    x1 = lines_data$x1[1],
+    y0 = lines_data$y0[1],
+    y1 = lines_data$y1[1],
+    xref='x',yref='y',
+    line=list(color='green',width=0.5))
+  
+  test_lines <- list(l1, l2)
+  i <- length(test_lines)+1
+  test_lines[[i]] <- list(
+    type='line',
+    x0 = lines_data$x0[1], 
+    x1 = lines_data$x1[1],
+    y0 = lines_data$y0[2],
+    y1 = lines_data$y1[1],
+    xref='x',yref='y',
+    line=list(color='blue',width=0.5))
+  
   lines <- reactive({
     print("re-getting lines")
-    values$lines
     print(length(values$lines))
+    return(values$lines)
   })
 
   reactiveMaster <- reactive({
@@ -63,9 +91,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLine, {
-    lines <- values$lines
-    i <- length(lines)+1
-    lines[[i]] <- list(
+    print("manually adding line")
+    i <- length(values$lines)+1
+    values$lines[[i]] <- list(
       type='line',
       x0 = input$lineDrawDateRange[1], 
       x1 =input$lineDrawDateRange[2],
@@ -73,8 +101,6 @@ server <- function(input, output, session) {
       y1 = input$y1,
       xref='x',yref='y',
       line=list(color='green',width=0.5))
-    print("manually adding a line")
-    values$lines <- lines
   })
   
   observeEvent(input$addLineDrag, {
