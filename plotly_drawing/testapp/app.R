@@ -20,7 +20,14 @@ ui <- fluidPage(
     numericInput("y0", label="y0", value=3),
     numericInput("y1", label="y1", value=3),
     actionButton("addLine", "Add Line Manually"),
-    actionButton("addLineDrag", "Add line by clicking")
+    selectInput("plot_line", "Plot to draw on",
+                c("Default" = "default",
+                  "S" = "s",
+                  "P" = "p",
+                  "S10Y" = "s10y",
+                  "P10Y" = "p10y"),
+                selected="Default")
+    # actionButton("addLineDrag", "Add line by clicking")
   ),
   mainPanel(
     plotlyOutput("p"),
@@ -34,12 +41,20 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   load('w.ws.RData')
 
-  values <- reactiveValues(val=NULL, lines=list())
+  values <- reactiveValues(val=NULL, 
+                           lines=list(), 
+                           slines=list(),
+                           plines=list(),
+                           s10lines=list(),
+                           p10lines=list())
   
   lines <- reactive({
     print("re-getting lines")
     print(length(values$lines))
     return(values$lines)
+  })
+  slines <- reactive({
+    return(values$slines)
   })
 
   reactiveMaster <- reactive({
@@ -72,7 +87,10 @@ server <- function(input, output, session) {
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d5.suw,
             type='scatter',
-            mode='lines+markers') 
+            mode='lines+markers') %>%
+      layout(
+        shapes=slines()) %>%
+      config(editable=TRUE)
   })
   output$figp <- renderPlotly({
     us10y.p$cwc$f.d5.w[j:k]  %>%
@@ -104,6 +122,16 @@ server <- function(input, output, session) {
   
   observeEvent(input$addLine, {
     print("manually adding line")
+    pline <- input$plot_line
+    if(pline == "default") {
+      add_lines() 
+    }
+    else if(pline == "s") {
+      add_lines_s()
+    }
+  })
+  
+  add_lines <- function() {
     i <- length(values$lines)+1
     values$lines[[i]] <- list(
       type='line',
@@ -113,7 +141,20 @@ server <- function(input, output, session) {
       y1 = input$y1,
       xref='x',yref='y',
       line=list(color=input$line_color,width=0.5))
-  })
+  }
+  
+  add_lines_s <- function() {
+    i <- length(values$slines)+1
+    values$slines[[i]] <- list(
+      type='line',
+      x0 = input$lineDrawDateRange[1], 
+      x1 =input$lineDrawDateRange[2],
+      y0 = input$y0,
+      y1 = input$y1,
+      xref='x',yref='y',
+      line=list(color=input$line_color,width=0.5))
+  }
+  
   
   observeEvent(input$addLineDrag, {
     # wait for first  click
