@@ -7,8 +7,14 @@ ui <- fluidPage(
     dateRangeInput("inDateRange", "Date range input:", 
                    start="2018-05-19",
                    end="2019-05-19"),
-    verbatimTextOutput("info"),
+    actionButton("setP1", "Set P1"),
+    verbatimTextOutput("click1"),
+    actionButton("setP2", "Set P2"),
+    verbatimTextOutput("click2"),
+    actionButton("addLineClick", "Click to create a line with P1 and P2"),
     verbatimTextOutput("clicks"),
+    verbatimTextOutput("lastClick"),
+    # verbatimTextOutput("info"),
     h3("manual line entry:"),
     selectInput("line_color", "Line Color:",
                 c("Green" = "green",
@@ -46,6 +52,11 @@ server <- function(input, output, session) {
   load('w.ws.RData')
 
   values <- reactiveValues(val=NULL, 
+                           clicks=NULL,
+                           click1=NULL,
+                           click2=NULL,
+                           lastClick=NULL,
+                           listenForClick=FALSE,
                            lines=list(), 
                            slines=list(),
                            plines=list(),
@@ -58,6 +69,19 @@ server <- function(input, output, session) {
                              y0=c(),
                              y1=c(),
                              plot=c()))
+  output$click1 <- renderPrint({
+    values$click1
+  })
+  output$click2 <- renderPrint({
+    values$click2
+  })
+  output$lastClick <- renderPrint({
+    values$lastClick
+  })
+  
+  values$clicks <- reactive({
+    event_data('plotly_click')
+  })
   
   output$p_line_table <- DT::renderDataTable({
     line_data_table() %>%
@@ -65,7 +89,6 @@ server <- function(input, output, session) {
   })
   
   line_data_table <- reactive({
-    print("should be re-getting DT")
     return(values$line_data_table)
   })
   
@@ -136,6 +159,7 @@ server <- function(input, output, session) {
     event_data("plotly_relayout")
   })
   output$clicks <- renderPrint({
+    values$lastClick <- event_data("plotly_click")
     event_data("plotly_click")
   })
   
@@ -147,6 +171,22 @@ server <- function(input, output, session) {
     else if(pline == "s") {
       add_lines_s()
     }
+  })
+  
+  observeEvent(input$setP1, {
+    print('got dat click!')
+    values$click1 <- values$lastClick
+  })
+  
+  observeEvent(input$setP2, {
+    print('got dat click2!')
+    values$click2 <- values$lastClick
+  })
+  
+  observeEvent(input$addLineClick, {
+    values$listenForClick <- TRUE
+    print("got 'em where we want 'em")
+    print(values$clicks())
   })
   
   add_lines <- function() {
