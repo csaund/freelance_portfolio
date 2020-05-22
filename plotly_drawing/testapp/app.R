@@ -1,4 +1,5 @@
 library(shiny)
+library(DT)
 
 ui <- fluidPage(
   sidebarPanel(
@@ -31,6 +32,7 @@ ui <- fluidPage(
   ),
   mainPanel(
     plotlyOutput("p"),
+    DT::dataTableOutput("p_line_table"),
     plotlyOutput("figs"),
     plotlyOutput("figp"),
     plotlyOutput("figs10"),
@@ -46,11 +48,22 @@ server <- function(input, output, session) {
                            slines=list(),
                            plines=list(),
                            s10lines=list(),
-                           p10lines=list())
+                           p10lines=list(),
+                           line_data_table=data.frame(
+                             start=c(),
+                             end=c(),
+                             percent_diff=c()))
+  
+  output$p_line_table <- DT::renderDataTable({
+    line_data_table()
+  })
+  
+  line_data_table <- reactive({
+    print("should be re-getting DT")
+    return(values$line_data_table)
+  })
   
   lines <- reactive({
-    print("re-getting lines")
-    print(length(values$lines))
     return(values$lines)
   })
   slines <- reactive({
@@ -121,7 +134,6 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLine, {
-    print("manually adding line")
     pline <- input$plot_line
     if(pline == "default") {
       add_lines() 
@@ -141,6 +153,7 @@ server <- function(input, output, session) {
       y1 = input$y1,
       xref='x',yref='y',
       line=list(color=input$line_color,width=0.5))
+    add_line_to_dt()
   }
   
   add_lines_s <- function() {
@@ -154,13 +167,18 @@ server <- function(input, output, session) {
       xref='x',yref='y',
       line=list(color=input$line_color,width=0.5))
   }
+
+  add_line_to_dt <- function() {
+    print("testing DT.")
+    print(input$y0)
+    new <- data.frame(input$lineDrawDateRange[1], 
+                      input$lineDrawDateRange[2],
+                      input$y1 - input$y0)
+    names(new) <- c('start', 'end', 'percent_diff')
+    values$line_data_table <- rbind(values$line_data_table, new)
+    print(values$line_data_table)    
+  }
   
-  
-  observeEvent(input$addLineDrag, {
-    # wait for first  click
-    # wait for second click
-    # draw dat line
-  })
   
 }
 
