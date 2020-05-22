@@ -1,5 +1,6 @@
 library(shiny)
 library(DT)
+library(dplyr)
 
 ui <- fluidPage(
   sidebarPanel(
@@ -33,6 +34,7 @@ ui <- fluidPage(
   mainPanel(
     plotlyOutput("p"),
     DT::dataTableOutput("p_line_table"),
+    downloadButton("downloadData", "Download Line Data"),
     plotlyOutput("figs"),
     plotlyOutput("figp"),
     plotlyOutput("figs10"),
@@ -52,10 +54,14 @@ server <- function(input, output, session) {
                            line_data_table=data.frame(
                              start=c(),
                              end=c(),
-                             percent_diff=c()))
+                             percent_diff=c(),
+                             y0=c(),
+                             y1=c(),
+                             plot=c()))
   
   output$p_line_table <- DT::renderDataTable({
-    line_data_table()
+    line_data_table() %>%
+      select('start', 'end', 'percent_diff')
   })
   
   line_data_table <- reactive({
@@ -153,7 +159,7 @@ server <- function(input, output, session) {
       y1 = input$y1,
       xref='x',yref='y',
       line=list(color=input$line_color,width=0.5))
-    add_line_to_dt()
+    add_line_to_dt('p')
   }
   
   add_lines_s <- function() {
@@ -168,17 +174,26 @@ server <- function(input, output, session) {
       line=list(color=input$line_color,width=0.5))
   }
 
-  add_line_to_dt <- function() {
+  add_line_to_dt <- function(plot_to_add) {
     print("testing DT.")
     print(input$y0)
     new <- data.frame(input$lineDrawDateRange[1], 
                       input$lineDrawDateRange[2],
-                      input$y1 - input$y0)
-    names(new) <- c('start', 'end', 'percent_diff')
+                      input$y1 - input$y0,
+                      input$y0,
+                      input$y1,
+                      plot_to_add)
+    names(new) <- c('start', 'end', 'percent_diff', 'y0', 'y1', 'plot')
     values$line_data_table <- rbind(values$line_data_table, new)
     print(values$line_data_table)    
   }
   
+  output$downloadData <- downloadHandler(
+    filename = "line_data.csv",
+    content = function(file) {
+      write.csv(line_data_table(), file, row.names = FALSE)
+    }
+  )
   
 }
 
