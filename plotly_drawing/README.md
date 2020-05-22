@@ -5,6 +5,7 @@
 
 
 Stretch:
+- :radio_button: Use positions of line to populate and display new data table with derived value (% diff)
 - :radio_button: Add lines by clicking on data points and creating input/output
 - :radio_button: Save these lines to a dataframe that can be accessed later.
 - :radio_button: Load lines from a dataframe that can be pre-drawn on the plotly object. 
