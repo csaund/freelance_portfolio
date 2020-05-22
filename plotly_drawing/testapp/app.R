@@ -11,9 +11,10 @@ ui <- fluidPage(
     verbatimTextOutput("click1"),
     actionButton("setP2", "Set P2"),
     verbatimTextOutput("click2"),
-    actionButton("addLineClick", "Click to create a line with P1 and P2"),
     verbatimTextOutput("clicks"),
-    verbatimTextOutput("lastClick"),
+    numericInput("y0_click", label="y0", value=3),
+    numericInput("y1_click", label="y1", value=3),
+    actionButton("addLineClick", "Click to create a line with P1 and P2"),
     # verbatimTextOutput("info"),
     h3("manual line entry:"),
     selectInput("line_color", "Line Color:",
@@ -174,19 +175,28 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$setP1, {
-    print('got dat click!')
     values$click1 <- values$lastClick
   })
   
   observeEvent(input$setP2, {
-    print('got dat click2!')
     values$click2 <- values$lastClick
   })
   
   observeEvent(input$addLineClick, {
-    values$listenForClick <- TRUE
-    print("got 'em where we want 'em")
-    print(values$clicks())
+    print(values$click1)
+    print(values$click1[['x']])
+    i <- length(values$lines)+1
+    values$lines[[i]] <- list(
+      type='line',
+      x0 = values$click1[['x']], 
+      x1 = values$click2[['x']],
+      y0 = input$y0_click,
+      y1 = input$y1_click,
+      xref='x',yref='y',
+      line=list(color=input$line_color,width=0.5))
+    add_line_to_dt('p')
+    values$click1 <- NULL
+    values$click2 <- NULL
   })
   
   add_lines <- function() {
@@ -194,7 +204,7 @@ server <- function(input, output, session) {
     values$lines[[i]] <- list(
       type='line',
       x0 = input$lineDrawDateRange[1], 
-      x1 =input$lineDrawDateRange[2],
+      x1 = input$lineDrawDateRange[2],
       y0 = input$y0,
       y1 = input$y1,
       xref='x',yref='y',
