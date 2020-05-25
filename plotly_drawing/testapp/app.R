@@ -63,11 +63,8 @@ server <- function(input, output, session) {
   load('w.ws.RData')
   
   inputLines <- observeEvent(input$up, {
-    print('input lines')
     values$shouldUpload <- TRUE
-    print(input$inputLineFile)
     inFile <- input$inputLineFile
-    print(class(inFile))
     if (is.null(inFile))
       return(NULL)
     inputLineData <- read.csv(inFile$datapath, stringsAsFactors = FALSE)
@@ -228,7 +225,6 @@ server <- function(input, output, session) {
     if (is.null(values$click1[['x']])) {
       return(NULL)
     }
-    i <- length(values$lines)+1
     add_lines(
       values$click1[['x']], 
       values$click2[['x']],
@@ -241,8 +237,7 @@ server <- function(input, output, session) {
   })
   
   add_lines <- function(xs, xe, ys, ye, col, plot_to_add) {
-    i <- length(values$lines)+1
-    values$lines[[i]] <- list(
+    li <- list(
       type='line',
       x0 = xs, 
       x1 = xe,
@@ -250,6 +245,26 @@ server <- function(input, output, session) {
       y1 = ye,
       xref='x',yref='y',
       line=list(color=col,width=0.5))
+    if(plot_to_add=='default') {
+      i <- length(values$lines)+1
+      values$lines[[i]] <- li      
+    }
+    else if(plot_to_add=='s') {
+      i <- length(values$slines)+1
+      values$slines[[i]] <- li      
+    }
+    else if(plot_to_add=='p') {
+      i <- length(values$plines)+1
+      values$plines[[i]] <- li      
+    }
+    else if(plot_to_add=='s10y') {
+      i <- length(values$s10lines)+1
+      values$s10lines[[i]] <- li      
+    }
+    else if(plot_to_add=='p10y') {
+      i <- length(values$p10lines)+1
+      values$p10lines[[i]] <- li      
+    }
     add_line_to_dt(xs, xe, ys, ye, col, plot_to_add)
   }
 
