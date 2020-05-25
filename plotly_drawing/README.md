@@ -3,9 +3,15 @@
 - :white_check_mark: Draw lines on multiple subplots at once
 - :white_check_mark: Move lines around on subplot (until re-render)
 
-
 Stretch:
 - :white_check_mark: Use positions of line to populate and display new data table with derived value (% diff)
 - :white_check_mark: Add lines by clicking on data points and creating input/output
 - :white_check_mark: Save these lines to a dataframe that can be accessed later.
-- :radio_button: Load lines from a dataframe that can be pre-drawn on the plotly object. 
+- :white_check_mark: Load lines from a dataframe that can be pre-drawn on the plotly object. 
+
+To run: 
+- Download and navigate into /testapp
+- run from either inside R Studio or using Shiny command in R runtime. 
+
+TODO: 
+- Refactor to draw on each plot line nicely instead of waggling variables around everywhere. 
