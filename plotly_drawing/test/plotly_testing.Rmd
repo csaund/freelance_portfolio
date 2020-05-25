@@ -155,6 +155,7 @@ t <- layout(fig, title = 'changing?? with Lines', shapes=lines)
 t
 
 fig <- w.ws[j:k] %>%
+  filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2]) %>%
   plot_ly(x=~Date,
           type='candlestick',
           open=~Open,

@@ -2,6 +2,8 @@ library(shiny)
 library(plotly)
 library(DT)
 library(dplyr)
+library(tidyverse)
+library(ggplot2)
 
 ui <- fluidPage(
   sidebarPanel(
@@ -135,6 +137,8 @@ server <- function(input, output, session) {
   })
   
   p <- reactive({
+    #print(input$inDateRange[1])
+    #print(input$inDateRange[2])
     dat <- w.ws %>% 
       filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
     if(nrow(dat)==0) {
@@ -291,7 +295,7 @@ server <- function(input, output, session) {
   output$downloadData <- downloadHandler(
     filename = "line_data.csv",
     content = function(file) {
-      write.csv(line_data_table(), file, row.names = FALSE)
+      write.csv(values$line_data_table, file, row.names = FALSE)
     }
   )
   
