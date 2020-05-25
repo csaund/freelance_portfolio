@@ -127,16 +127,9 @@ server <- function(input, output, session) {
     line_data_table() %>%
       select('start', 'end', 'percent_diff')
   })
-  
+
   line_data_table <- reactive({
     return(values$line_data_table)
-  })
-  
-  lines <- reactive({
-    return(values$lines)
-  })
-  slines <- reactive({
-    return(values$slines)
   })
 
   reactiveMaster <- reactive({
@@ -158,7 +151,7 @@ server <- function(input, output, session) {
             low=~Low,
             close=~Settle) %>%
       layout(
-        shapes = lines()) %>%
+        shapes = values$lines) %>%
       config(editable = TRUE)
   })
   # TODO make this inputable
@@ -171,7 +164,7 @@ server <- function(input, output, session) {
             type='scatter',
             mode='lines+markers') %>%
       layout(
-        shapes=slines()) %>%
+        shapes=values$slines) %>%
       config(editable=TRUE)
   })
   output$figp <- renderPlotly({
@@ -179,20 +172,29 @@ server <- function(input, output, session) {
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d5.prw,
             type='scatter',
-            mode='lines+markers')
+            mode='lines+markers') %>%
+      layout(
+        shapes=values$plines) %>%
+      config(editable=TRUE)
   })
   output$figs10 <- renderPlotly({
     us10y.p$cwc$f.d10.w[j:k]  %>%
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d10.suw,
             type='scatter',
-            mode='lines+markers')
+            mode='lines+markers') %>%
+      layout(
+        shapes=values$s10lines) %>%
+      config(editable=TRUE)
   })
   output$figp10 <- renderPlotly({
     us10y.p$cwc$f.d10.w[j:k]  %>%
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d10.prw,type='scatter',
-            mode='lines+markers')
+            mode='lines+markers') %>%
+      layout(
+        shapes=values$p10lines) %>%
+      config(editable=TRUE)
   })
   
   output$info <- renderPrint({
@@ -223,6 +225,9 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLineClick, {
+    if (is.null(values$click1[['x']])) {
+      return(NULL)
+    }
     i <- length(values$lines)+1
     add_lines(
       values$click1[['x']], 
