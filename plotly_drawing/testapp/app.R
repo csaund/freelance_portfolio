@@ -4,6 +4,9 @@ library(dplyr)
 
 ui <- fluidPage(
   sidebarPanel(
+    dateRangeInput("inDateRange", "Plot Range:", 
+                   start="2018-05-19",
+                   end="2019-05-19"),
     h3('Load lines into plot'),
     fileInput("inputLineFile", "Choose CSV File",
               accept = c(
@@ -11,9 +14,7 @@ ui <- fluidPage(
                 "text/comma-separated-values,text/plain",
                 ".csv")
     ),
-    dateRangeInput("inDateRange", "Date range input:", 
-                   start="2018-05-19",
-                   end="2019-05-19"),
+    actionButton("up","Upload"),
     actionButton("setP1", "Set P1"),
     verbatimTextOutput("click1"),
     actionButton("setP2", "Set P2"),
@@ -60,36 +61,47 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   load('w.ws.RData')
   
-  inputLines <- reactive({
-    inFile <- input$inputLineFile
-    if (is.null(inFile))
-      return(NULL)
-    loadLines()
-    read.csv(inFile$datapath, header = input$header)
-  })
-  # Load Lines
-  
-  output$lines <- renderTable({
-    # input$file1 will be NULL initially. After the user selects
-    # and uploads a file, it will be a data frame with 'name',
-    # 'size', 'type', and 'datapath' columns. The 'datapath'
-    # column will contain the local filenames where the data can
-    # be found.
+  inputLines <- observeEvent(input$up, {
+    print('input lines')
+    values$shouldUpload <- TRUE
     print(input$inputLineFile)
     inFile <- input$inputLineFile
     print(class(inFile))
     if (is.null(inFile))
       return(NULL)
     inputLineData <- read.csv(inFile$datapath)
-    loadLines(inputlineData)
+    loadLines(inputLineData)
     return(inputLineData)
   })
+  # Load Lines
   
-  loadLines <- function(inputlineData){
-    print('do stuff about lines here')
+  #output$lines <- renderTable({
+  #  print(input$inputLineFile)
+  #  inFile <- input$inputLineFile
+  #  print(class(inFile))
+  #  if (is.null(inFile))
+  #    return(NULL)
+  #  inputLineData <- read.csv(inFile$datapath)
+  #  loadLines(inputLineData)
+  #  return(inputLineData)
+  #})
+  
+  loadLines <- function(lineData){
+    if(values$shouldUpload)
+    print('did stuff about lines here?')
+    for (row in 1:nrow(lineData)) {
+      x0 <- lineData[row, "start"]
+      x1  <- lineData[row, "end"]
+      y0 <- lineData[row, "y0"]
+      y1 <- lineData[row, "y1"]
+      line_color <- lineData[row, "color"]
+      p <- lineData[row, "plot"]
+      add_lines(x0,x1,y0,y1,line_color,p)
+    }
+    values$shouldUpload=NULL
   }
 
-  values <- reactiveValues(val=NULL, 
+  values <- reactiveValues(shouldUpload=NULL, 
                            clicks=NULL,
                            click1=NULL,
                            click2=NULL,
@@ -106,6 +118,7 @@ server <- function(input, output, session) {
                              percent_diff=c(),
                              y0=c(),
                              y1=c(),
+                             color=c(),
                              plot=c()))
   output$click1 <- renderPrint({
     values$click1
@@ -241,17 +254,24 @@ server <- function(input, output, session) {
       y1 = ye,
       xref='x',yref='y',
       line=list(color=col,width=0.5))
-    add_line_to_dt(xs, xe, ys, ye, plot_to_add)
+    add_line_to_dt(xs, xe, ys, ye, col, plot_to_add)
   }
 
-  add_line_to_dt <- function(xs, xe, ys, ye, plot_to_add) {
+  add_line_to_dt <- function(xs, xe, ys, ye, line_color, plot_to_add) {
+    print(xs)
+    print(xe)
+    print(ys)
+    print(ye)
+    print(line_color)
+    print(plot_to_add)
     new <- data.frame(xs, 
                       xe,
                       ye - ys,
                       ys,
                       ye,
+                      line_color,
                       plot_to_add)
-    names(new) <- c('start', 'end', 'percent_diff', 'y0', 'y1', 'plot')
+    names(new) <- c('start', 'end', 'percent_diff', 'y0', 'y1', 'color', 'plot')
     values$line_data_table <- rbind(values$line_data_table, new)
     print(values$line_data_table)    
   }
