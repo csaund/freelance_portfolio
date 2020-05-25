@@ -4,6 +4,13 @@ library(dplyr)
 
 ui <- fluidPage(
   sidebarPanel(
+    h3('Load lines into plot'),
+    fileInput("inputLineFile", "Choose CSV File",
+              accept = c(
+                "text/csv",
+                "text/comma-separated-values,text/plain",
+                ".csv")
+    ),
     dateRangeInput("inDateRange", "Date range input:", 
                    start="2018-05-19",
                    end="2019-05-19"),
@@ -39,6 +46,7 @@ ui <- fluidPage(
     # actionButton("addLineDrag", "Add line by clicking")
   ),
   mainPanel(
+    tableOutput("lines"),
     plotlyOutput("p"),
     DT::dataTableOutput("p_line_table"),
     downloadButton("downloadData", "Download Line Data"),
@@ -51,6 +59,35 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   load('w.ws.RData')
+  
+  inputLines <- reactive({
+    inFile <- input$inputLineFile
+    if (is.null(inFile))
+      return(NULL)
+    loadLines()
+    read.csv(inFile$datapath, header = input$header)
+  })
+  # Load Lines
+  
+  output$lines <- renderTable({
+    # input$file1 will be NULL initially. After the user selects
+    # and uploads a file, it will be a data frame with 'name',
+    # 'size', 'type', and 'datapath' columns. The 'datapath'
+    # column will contain the local filenames where the data can
+    # be found.
+    print(input$inputLineFile)
+    inFile <- input$inputLineFile
+    print(class(inFile))
+    if (is.null(inFile))
+      return(NULL)
+    inputLineData <- read.csv(inFile$datapath)
+    loadLines(inputlineData)
+    return(inputLineData)
+  })
+  
+  loadLines <- function(inputlineData){
+    print('do stuff about lines here')
+  }
 
   values <- reactiveValues(val=NULL, 
                            clicks=NULL,
@@ -165,13 +202,12 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLine, {
-    pline <- input$plot_line
-    if(pline == "default") {
-      add_lines() 
-    }
-    else if(pline == "s") {
-      add_lines_s()
-    }
+    add_lines(input$lineDrawDateRange[1], 
+              input$lineDrawDateRange[2],
+              input$y0,
+              input$y1,
+              input$line_color,
+              input$plot_line) 
   })
   
   observeEvent(input$setP1, {
@@ -183,55 +219,37 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLineClick, {
-    print(values$click1)
-    print(values$click1[['x']])
     i <- length(values$lines)+1
-    values$lines[[i]] <- list(
-      type='line',
-      x0 = values$click1[['x']], 
-      x1 = values$click2[['x']],
-      y0 = input$y0_click,
-      y1 = input$y1_click,
-      xref='x',yref='y',
-      line=list(color=input$line_color,width=0.5))
-    add_line_to_dt('p')
+    add_lines(
+      values$click1[['x']], 
+      values$click2[['x']],
+      input$y0_click,
+      input$y1_click,
+      input$line_color,
+      input$plot_line)
     values$click1 <- NULL
     values$click2 <- NULL
   })
   
-  add_lines <- function() {
+  add_lines <- function(xs, xe, ys, ye, col, plot_to_add) {
     i <- length(values$lines)+1
     values$lines[[i]] <- list(
       type='line',
-      x0 = input$lineDrawDateRange[1], 
-      x1 = input$lineDrawDateRange[2],
-      y0 = input$y0,
-      y1 = input$y1,
+      x0 = xs, 
+      x1 = xe,
+      y0 = ys,
+      y1 = ye,
       xref='x',yref='y',
-      line=list(color=input$line_color,width=0.5))
-    add_line_to_dt('p')
-  }
-  
-  add_lines_s <- function() {
-    i <- length(values$slines)+1
-    values$slines[[i]] <- list(
-      type='line',
-      x0 = input$lineDrawDateRange[1], 
-      x1 =input$lineDrawDateRange[2],
-      y0 = input$y0,
-      y1 = input$y1,
-      xref='x',yref='y',
-      line=list(color=input$line_color,width=0.5))
+      line=list(color=col,width=0.5))
+    add_line_to_dt(xs, xe, ys, ye, plot_to_add)
   }
 
-  add_line_to_dt <- function(plot_to_add) {
-    print("testing DT.")
-    print(input$y0)
-    new <- data.frame(input$lineDrawDateRange[1], 
-                      input$lineDrawDateRange[2],
-                      input$y1 - input$y0,
-                      input$y0,
-                      input$y1,
+  add_line_to_dt <- function(xs, xe, ys, ye, plot_to_add) {
+    new <- data.frame(xs, 
+                      xe,
+                      ye - ys,
+                      ys,
+                      ye,
                       plot_to_add)
     names(new) <- c('start', 'end', 'percent_diff', 'y0', 'y1', 'plot')
     values$line_data_table <- rbind(values$line_data_table, new)
