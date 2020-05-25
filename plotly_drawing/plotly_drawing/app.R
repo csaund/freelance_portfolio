@@ -17,8 +17,8 @@ ui <- fluidPage(
     actionButton("up","Upload"),
     br(),
     h3('Line parameters:'),
-    numericInput("y0", label="y0", value=3),
-    numericInput("y1", label="y1", value=3),
+    numericInput("y0", label="y0", value=3, step=0.1),
+    numericInput("y1", label="y1", value=3, step=0.1),
     selectInput("line_color", "Line Color:",
                 c("Green" = "green",
                   "Red" = "red",
@@ -45,7 +45,6 @@ ui <- fluidPage(
                   "S10Y" = "s10y",
                   "P10Y" = "p10y"),
                 selected="Default")
-    # actionButton("addLineDrag", "Add line by clicking")
   ),
   mainPanel(
     tableOutput("lines"),
@@ -62,6 +61,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   load('w.ws.RData')
   
+  # Input the data
   inputLines <- observeEvent(input$up, {
     values$shouldUpload <- TRUE
     inFile <- input$inputLineFile
@@ -72,6 +72,7 @@ server <- function(input, output, session) {
     return(inputLineData)
   })
 
+  # Load lines from data input
   loadLines <- function(lineData){
     if(values$shouldUpload)
     for (row in 1:nrow(lineData)) {
@@ -86,17 +87,18 @@ server <- function(input, output, session) {
     values$shouldUpload=NULL
   }
 
-  values <- reactiveValues(shouldUpload=NULL, 
-                           clicks=NULL,
-                           click1=NULL,
-                           click2=NULL,
-                           lastClick=NULL,
-                           lines=list(), 
-                           slines=list(),
-                           plines=list(),
-                           s10lines=list(),
-                           p10lines=list(),
-                           line_data_table=data.frame(
+  # Set all reactive values
+  values <- reactiveValues(shouldUpload=NULL,   # So it only uploads once
+                           clicks=NULL,         # to display the last click
+                           click1=NULL,         # to display P1
+                           click2=NULL,         # to display P2
+                           lastClick=NULL,      # to keep track of the last click
+                           lines=list(),        # lines for default plot
+                           slines=list(),       # lines for s
+                           plines=list(),       # lines for p
+                           s10lines=list(),     # lines for s10y
+                           p10lines=list(),     # lines for p10y
+                           line_data_table=data.frame(   # default line df
                              start=c(),
                              end=c(),
                              percent_diff=c(),
@@ -106,6 +108,7 @@ server <- function(input, output, session) {
                              plot=c(),
                              stringsAsFactors = FALSE))
   
+  # Printable output
   output$click1 <- renderPrint({
     values$click1
   })
@@ -120,13 +123,13 @@ server <- function(input, output, session) {
     event_data('plotly_click')
   })
   
+  # Table and plot outputs
   output$p_line_table <- DT::renderDataTable({
-    line_data_table() %>%
+    if(nrow(values$line_data_table)==0) {
+      return(NULL)
+    }
+    values$line_data_table %>%
       select('start', 'end', 'percent_diff')
-  })
-
-  line_data_table <- reactive({
-    return(values$line_data_table)
   })
 
   reactiveMaster <- reactive({
@@ -151,7 +154,7 @@ server <- function(input, output, session) {
         shapes = values$lines) %>%
       config(editable = TRUE)
   })
-  # TODO make this inputable
+  
   j=2600
   k=2700
   output$figs <- renderPlotly({
@@ -194,9 +197,7 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   
-  output$info <- renderPrint({
-    event_data("plotly_relayout")
-  })
+  # Observe events from input buttons
   output$clicks <- renderPrint({
     values$lastClick <- event_data("plotly_click")
     event_data("plotly_click")
@@ -236,6 +237,7 @@ server <- function(input, output, session) {
     values$click2 <- NULL
   })
   
+  # Add line to reactive values
   add_lines <- function(xs, xe, ys, ye, col, plot_to_add) {
     li <- list(
       type='line',
@@ -268,6 +270,7 @@ server <- function(input, output, session) {
     add_line_to_dt(xs, xe, ys, ye, col, plot_to_add)
   }
 
+  # Add lines to actual df
   add_line_to_dt <- function(xs, xe, ys, ye, line_color, plot_to_add) {
     new <- data.frame(xs, 
                       xe,
@@ -281,6 +284,7 @@ server <- function(input, output, session) {
     values$line_data_table <- rbind(values$line_data_table, new)
   }
   
+  # Download the line list. 
   output$downloadData <- downloadHandler(
     filename = "line_data.csv",
     content = function(file) {
