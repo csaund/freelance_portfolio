@@ -1,4 +1,5 @@
 library(shiny)
+library(plotly)
 library(DT)
 library(dplyr)
 
@@ -59,6 +60,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  # start by loading 
   load('w.ws.RData')
   
   # Input the data
@@ -131,15 +133,16 @@ server <- function(input, output, session) {
     values$line_data_table %>%
       select('start', 'end', 'percent_diff')
   })
-
-  reactiveMaster <- reactive({
-    dat <- w.ws %>% 
-      filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
-    return(dat)
-  })
   
   p <- reactive({
-    reactiveMaster()
+    dat <- w.ws %>% 
+      filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
+    if(nrow(dat)==0) {
+      return(w.ws)
+    }
+    else {
+      return(dat)
+    }
   })
   
   output$p <- renderPlotly({
