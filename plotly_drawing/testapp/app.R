@@ -70,26 +70,13 @@ server <- function(input, output, session) {
     print(class(inFile))
     if (is.null(inFile))
       return(NULL)
-    inputLineData <- read.csv(inFile$datapath)
+    inputLineData <- read.csv(inFile$datapath, stringsAsFactors = FALSE)
     loadLines(inputLineData)
     return(inputLineData)
   })
-  # Load Lines
-  
-  #output$lines <- renderTable({
-  #  print(input$inputLineFile)
-  #  inFile <- input$inputLineFile
-  #  print(class(inFile))
-  #  if (is.null(inFile))
-  #    return(NULL)
-  #  inputLineData <- read.csv(inFile$datapath)
-  #  loadLines(inputLineData)
-  #  return(inputLineData)
-  #})
-  
+
   loadLines <- function(lineData){
     if(values$shouldUpload)
-    print('did stuff about lines here?')
     for (row in 1:nrow(lineData)) {
       x0 <- lineData[row, "start"]
       x1  <- lineData[row, "end"]
@@ -107,7 +94,6 @@ server <- function(input, output, session) {
                            click1=NULL,
                            click2=NULL,
                            lastClick=NULL,
-                           listenForClick=FALSE,
                            lines=list(), 
                            slines=list(),
                            plines=list(),
@@ -120,7 +106,9 @@ server <- function(input, output, session) {
                              y0=c(),
                              y1=c(),
                              color=c(),
-                             plot=c()))
+                             plot=c(),
+                             stringsAsFactors = FALSE))
+  
   output$click1 <- renderPrint({
     values$click1
   })
@@ -216,8 +204,10 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$addLine, {
-    add_lines(input$lineDrawDateRange[1], 
-              input$lineDrawDateRange[2],
+    x0 = toString(input$lineDrawDateRange[1])
+    x1 = toString(input$lineDrawDateRange[2])
+    add_lines(x0, 
+              x1,
               input$y0,
               input$y1,
               input$line_color,
@@ -259,22 +249,16 @@ server <- function(input, output, session) {
   }
 
   add_line_to_dt <- function(xs, xe, ys, ye, line_color, plot_to_add) {
-    print(xs)
-    print(xe)
-    print(ys)
-    print(ye)
-    print(line_color)
-    print(plot_to_add)
     new <- data.frame(xs, 
                       xe,
                       ye - ys,
                       ys,
                       ye,
                       line_color,
-                      plot_to_add)
+                      plot_to_add,
+                      stringsAsFactors = FALSE)
     names(new) <- c('start', 'end', 'percent_diff', 'y0', 'y1', 'color', 'plot')
     values$line_data_table <- rbind(values$line_data_table, new)
-    print(values$line_data_table)    
   }
   
   output$downloadData <- downloadHandler(
