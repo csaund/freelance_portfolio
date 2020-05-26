@@ -50,10 +50,9 @@ ui <- fluidPage(
                 selected="Default")
   ),
   mainPanel(
-    tableOutput("lines"),
-    plotlyOutput("p"),
-    DT::dataTableOutput("p_line_table"),
     downloadButton("downloadData", "Download Line Data"),
+    plotlyOutput("p"),
+    # DT::dataTableOutput("p_line_table"),
     plotlyOutput("figs"),
     plotlyOutput("figp"),
     plotlyOutput("figs10"),
@@ -93,6 +92,8 @@ server <- function(input, output, session) {
 
   # Set all reactive values
   values <- reactiveValues(shouldUpload=NULL,   # So it only uploads once
+                           j=NULL,              # value dervied from date input
+                           k=NULL,              # value dervied from date input
                            clicks=NULL,         # to display the last click
                            click1=NULL,         # to display P1
                            click2=NULL,         # to display P2

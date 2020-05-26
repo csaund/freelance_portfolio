@@ -15,7 +15,7 @@ library(plotly)
 
 Their original code
 ```{r original code, eval=FALSE}
-load('w.ws.RData')
+load('test.RData')
 j=2400
 k=2700
 fig <- w.ws[j:k]%>%plot_ly(x=~Date,type='candlestick',open=~us10y.Open,high=~us10y.High,low=~us10y.Low,close=~us10y.Settle)
