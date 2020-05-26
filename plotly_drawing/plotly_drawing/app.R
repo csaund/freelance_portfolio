@@ -51,12 +51,12 @@ ui <- fluidPage(
   ),
   mainPanel(
     downloadButton("downloadData", "Download Line Data"),
-    plotlyOutput("p"),
+    plotlyOutput("p", height="210px"),
     # DT::dataTableOutput("p_line_table"),
-    plotlyOutput("figs"),
-    plotlyOutput("figp"),
-    plotlyOutput("figs10"),
-    plotlyOutput("figp10")
+    plotlyOutput("figs", height="210px"),
+    plotlyOutput("figp", height="210px"),
+    plotlyOutput("figs10", height="210px"),
+    plotlyOutput("figp10", height="210px")
   )
 )
 
@@ -157,7 +157,8 @@ server <- function(input, output, session) {
             open=~Open,
             high=~High,
             low=~Low,
-            close=~Settle) %>%
+            close=~Settle,
+            width = 600, height = 200) %>%
       layout(
         shapes = values$lines) %>%
       config(editable = TRUE)
@@ -165,12 +166,20 @@ server <- function(input, output, session) {
   
   j=2600
   k=2700
+  m <- list(
+    l = 10,
+    r = 10,
+    b = -100,
+    t = -100,
+    pad = 0
+  )
   output$figs <- renderPlotly({
     us10y.p$cwc$f.d5.w[j:k] %>%
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d5.suw,
             type='scatter',
-            mode='lines+markers') %>%
+            mode='lines+markers',
+            width = 600, height = 200) %>%
       layout(
         shapes=values$slines) %>%
       config(editable=TRUE)
@@ -180,7 +189,8 @@ server <- function(input, output, session) {
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d5.prw,
             type='scatter',
-            mode='lines+markers') %>%
+            mode='lines+markers',
+            width = 600, height = 200) %>%
       layout(
         shapes=values$plines) %>%
       config(editable=TRUE)
@@ -190,7 +200,8 @@ server <- function(input, output, session) {
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d10.suw,
             type='scatter',
-            mode='lines+markers') %>%
+            mode='lines+markers',
+            width = 600, height = 200) %>%
       layout(
         shapes=values$s10lines) %>%
       config(editable=TRUE)
@@ -199,7 +210,8 @@ server <- function(input, output, session) {
     us10y.p$cwc$f.d10.w[j:k]  %>%
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d10.prw,type='scatter',
-            mode='lines+markers') %>%
+            mode='lines+markers',
+            width = 600, height = 200) %>%
       layout(
         shapes=values$p10lines) %>%
       config(editable=TRUE)
