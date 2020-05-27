@@ -54,12 +54,12 @@ ui <- fluidPage(
   ),
   mainPanel(
     downloadButton("downloadData", "Download Line Data"),
-    plotlyOutput("p"),
+    plotlyOutput("p", height="auto"),
     # DT::dataTableOutput("p_line_table"),
-    plotlyOutput("figs"),
-    plotlyOutput("figp"),
-    plotlyOutput("figs10"),
-    plotlyOutput("figp10")
+    plotlyOutput("figs", height="auto"),
+    plotlyOutput("figp", height="auto"),
+    plotlyOutput("figs10", height="auto"),
+    plotlyOutput("figp10", height="auto")
   )
 )
 
