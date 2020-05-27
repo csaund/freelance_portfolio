@@ -101,6 +101,8 @@ server <- function(input, output, session) {
                            k=NULL,              # value dervied from date input
                            clicks=NULL,         # to display the last click
                            click1=NULL,         # to display P1
+                           y0=NULL,    # keep track to automatically set y value
+                           y1=NULL,    # on point click
                            click2=NULL,         # to display P2
                            lastClick=NULL,      # to keep track of the last click
                            lines=list(),        # lines for default plot
@@ -250,10 +252,14 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$setP1, {
+    res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
+    values$y0 <- res$Settle
     values$click1 <- values$lastClick
   })
   
   observeEvent(input$setP2, {
+    res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
+    values$y1 <- res$Settle
     values$click2 <- values$lastClick
   })
   
@@ -264,12 +270,14 @@ server <- function(input, output, session) {
     add_lines(
       values$click1[['x']], 
       values$click2[['x']],
-      input$y0,
-      input$y1,
+      values$y0,
+      values$y1,
       input$line_color,
       input$plot_line)
     values$click1 <- NULL
     values$click2 <- NULL
+    values$y0 <- NULL
+    values$y1 <- NULL
   })
   
   # Add line to reactive values
