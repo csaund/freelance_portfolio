@@ -7,14 +7,6 @@ library(ggplot2)
 
 ui <- fluidPage(
   sidebarPanel(
-    numericInput("plot_height", label="plot height", value=200, step=10),
-    numericInput("plot_width", label="plot width", value=400, step=10),
-    numericInput("j", label="j", value=10000, step=10),
-    numericInput("k", label="k", value=10635, step=10),
-    actionButton("set_plot_dimensions", "Set plot dimensions"),
-    dateRangeInput("inDateRange", "Plot Range:", 
-                   start="2018-05-19",
-                   end="2019-05-19"),
     h3('Load lines into plot'),
     fileInput("inputLineFile", "Choose CSV File",
               accept = c(
@@ -24,9 +16,14 @@ ui <- fluidPage(
     ),
     actionButton("up","Upload"),
     br(),
-    h3('Line parameters:'),
-    numericInput("y0", label="y0", value=3, step=0.1),
-    numericInput("y1", label="y1", value=3, step=0.1),
+    h3('Draw lines:'),
+    selectInput("plot_line", "on plot:",
+                c("Default" = "default",
+                  "S" = "s",
+                  "P" = "p",
+                  "S10Y" = "s10y",
+                  "P10Y" = "p10y"),
+                selected="Default"),
     selectInput("line_color", "Line Color:",
                 c("Green" = "green",
                   "Red" = "red",
@@ -41,18 +38,22 @@ ui <- fluidPage(
     actionButton("setP2", "Set P2"),
     verbatimTextOutput("click2"),
     actionButton("addLineClick", "Click to create a line with P1 and P2"),
-    h4("Or create a line from these dates:"),
+    h4("Or create a line from these dates and values:"),
+    numericInput("y0", label="y0", value=3, step=0.1),
+    numericInput("y1", label="y1", value=3, step=0.1),
     dateRangeInput("lineDrawDateRange", "Date range input:", 
                    start="2018-05-19",
                    end="2019-05-19"),
     actionButton("addLine", "Add Line From Dates"),
-    selectInput("plot_line", "Plot to draw on",
-                c("Default" = "default",
-                  "S" = "s",
-                  "P" = "p",
-                  "S10Y" = "s10y",
-                  "P10Y" = "p10y"),
-                selected="Default")
+    h3("Plot size settings"),
+    numericInput("plot_height", label="plot height", value=200, step=10),
+    numericInput("plot_width", label="plot width", value=400, step=10),
+    numericInput("j", label="j", value=2600, step=10),
+    numericInput("k", label="k", value=2700, step=10),
+    actionButton("set_plot_dimensions", "Set plot dimensions"),
+    dateRangeInput("inDateRange", "Plot Range:", 
+                   start="2018-05-19",
+                   end="2019-05-19")
   ),
   mainPanel(
     downloadButton("downloadData", "Download Line Data"),
@@ -61,7 +62,8 @@ ui <- fluidPage(
     plotlyOutput("figs", height="auto"),
     plotlyOutput("figp", height="auto"),
     plotlyOutput("figs10", height="auto"),
-    plotlyOutput("figp10", height="auto")
+    plotlyOutput("figp10", height="auto"),
+    plotlyOutput("testPlot", height="auto")
   )
 )
 
@@ -154,12 +156,15 @@ server <- function(input, output, session) {
     print(input$inDateRange[2])
     values$j=input$j
     values$k=input$k
-    #start <- which(as.Date(w.ws$Date) == as.Date(input$inDateRange[1]))
-    #finish <- which(as.Date(w.ws$Date) == as.Date(input$inDateRange[2]))
-    #print(start)
-    #print(finish)
-    #values$j <- start
-    #values$k <- finish
+    t <- tail(w.ws, length(us10y.p$cwc$f.d5.w$us10y.f.d5.suw))   # I guess assume 
+                                                                 # that this is the latest 
+                                                                 # data from w.ws?
+    start <- which(as.Date(t$Date) == as.Date(input$inDateRange[1]))
+    finish <- which(as.Date(t$Date) == as.Date(input$inDateRange[2]))
+    print(start)
+    print(finish)
+    values$j <- start
+    values$k <- finish
     
     dat <- w.ws %>% 
       filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
@@ -227,6 +232,26 @@ server <- function(input, output, session) {
       layout(
         shapes=values$p10lines) %>%
       config(editable=TRUE)
+  })
+  
+  t <- reactive({
+    p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
+              y=~us10y.f.d5.suw,
+              type='scatter',
+              mode='lines+markers') %>%
+      layout(
+        shapes=values$slines) 
+    return(p)
+  })
+  
+  output$testPlot <- renderPlotly({
+    subplot(t(), t(), t(), t(), plot_ly(), 
+            nrows = 4, 
+            margin = 0.0, 
+            heights = c(0.25, 0.25, 0.25, 0.25),
+            shareX = TRUE,
+            which_layout = "merge")
   })
   
   # Observe events from input buttons
