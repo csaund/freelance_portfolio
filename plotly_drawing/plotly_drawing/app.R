@@ -7,6 +7,9 @@ library(ggplot2)
 
 ui <- fluidPage(
   sidebarPanel(
+    numericInput("plot_height", label="plot height", value=200, step=10),
+    numericInput("plot_width", label="plot width", value=400, step=10),
+    actionButton("set_plot_dimensions", "Set plot dimensions"),
     dateRangeInput("inDateRange", "Plot Range:", 
                    start="2018-05-19",
                    end="2019-05-19"),
@@ -51,12 +54,12 @@ ui <- fluidPage(
   ),
   mainPanel(
     downloadButton("downloadData", "Download Line Data"),
-    plotlyOutput("p", height="210px"),
+    plotlyOutput("p"),
     # DT::dataTableOutput("p_line_table"),
-    plotlyOutput("figs", height="210px"),
-    plotlyOutput("figp", height="210px"),
-    plotlyOutput("figs10", height="210px"),
-    plotlyOutput("figp10", height="210px")
+    plotlyOutput("figs"),
+    plotlyOutput("figp"),
+    plotlyOutput("figs10"),
+    plotlyOutput("figp10")
   )
 )
 
@@ -103,6 +106,8 @@ server <- function(input, output, session) {
                            plines=list(),       # lines for p
                            s10lines=list(),     # lines for s10y
                            p10lines=list(),     # lines for p10y
+                           plot_height=200,
+                           plot_width=600,
                            line_data_table=data.frame(   # default line df
                              start=c(),
                              end=c(),
@@ -158,7 +163,7 @@ server <- function(input, output, session) {
             high=~High,
             low=~Low,
             close=~Settle,
-            width = 600, height = 200) %>%
+            width = values$plot_width, height = values$plot_height) %>%
       layout(
         shapes = values$lines) %>%
       config(editable = TRUE)
@@ -179,7 +184,7 @@ server <- function(input, output, session) {
             y=~us10y.f.d5.suw,
             type='scatter',
             mode='lines+markers',
-            width = 600, height = 200) %>%
+            width = values$plot_width, height = values$plot_height) %>%
       layout(
         shapes=values$slines) %>%
       config(editable=TRUE)
@@ -190,7 +195,7 @@ server <- function(input, output, session) {
             y=~us10y.f.d5.prw,
             type='scatter',
             mode='lines+markers',
-            width = 600, height = 200) %>%
+            width = values$plot_width, height = values$plot_height) %>%
       layout(
         shapes=values$plines) %>%
       config(editable=TRUE)
@@ -201,7 +206,7 @@ server <- function(input, output, session) {
             y=~us10y.f.d10.suw,
             type='scatter',
             mode='lines+markers',
-            width = 600, height = 200) %>%
+            width = values$plot_width, height = values$plot_height) %>%
       layout(
         shapes=values$s10lines) %>%
       config(editable=TRUE)
@@ -211,7 +216,7 @@ server <- function(input, output, session) {
       plot_ly(x=w.ws[j:k,Date],
             y=~us10y.f.d10.prw,type='scatter',
             mode='lines+markers',
-            width = 600, height = 200) %>%
+            width = values$plot_width, height = values$plot_height) %>%
       layout(
         shapes=values$p10lines) %>%
       config(editable=TRUE)
@@ -221,6 +226,11 @@ server <- function(input, output, session) {
   output$clicks <- renderPrint({
     values$lastClick <- event_data("plotly_click")
     event_data("plotly_click")
+  })
+  
+  observeEvent(input$set_plot_dimensions, {
+    values$plot_height <- input$plot_height
+    values$plot_width <- input$plot_width
   })
   
   observeEvent(input$addLine, {
