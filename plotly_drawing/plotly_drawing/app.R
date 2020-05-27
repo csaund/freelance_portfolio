@@ -9,6 +9,8 @@ ui <- fluidPage(
   sidebarPanel(
     numericInput("plot_height", label="plot height", value=200, step=10),
     numericInput("plot_width", label="plot width", value=400, step=10),
+    numericInput("j", label="j", value=10000, step=10),
+    numericInput("k", label="k", value=10635, step=10),
     actionButton("set_plot_dimensions", "Set plot dimensions"),
     dateRangeInput("inDateRange", "Plot Range:", 
                    start="2018-05-19",
@@ -142,9 +144,21 @@ server <- function(input, output, session) {
       select('start', 'end', 'percent_diff')
   })
   
+  j=2600
+  k=2700
+  
   p <- reactive({
-    #print(input$inDateRange[1])
-    #print(input$inDateRange[2])
+    print(input$inDateRange[1])
+    print(input$inDateRange[2])
+    values$j=input$j
+    values$k=input$k
+    #start <- which(as.Date(w.ws$Date) == as.Date(input$inDateRange[1]))
+    #finish <- which(as.Date(w.ws$Date) == as.Date(input$inDateRange[2]))
+    #print(start)
+    #print(finish)
+    #values$j <- start
+    #values$k <- finish
+    
     dat <- w.ws %>% 
       filter(Date >= input$inDateRange[1] & Date < input$inDateRange[2])
     if(nrow(dat)==0) {
@@ -168,19 +182,10 @@ server <- function(input, output, session) {
         shapes = values$lines) %>%
       config(editable = TRUE)
   })
-  
-  j=2600
-  k=2700
-  m <- list(
-    l = 10,
-    r = 10,
-    b = -100,
-    t = -100,
-    pad = 0
-  )
+
   output$figs <- renderPlotly({
-    us10y.p$cwc$f.d5.w[j:k] %>%
-      plot_ly(x=w.ws[j:k,Date],
+    us10y.p$cwc$f.d5.w[values$j:values$k] %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
             y=~us10y.f.d5.suw,
             type='scatter',
             mode='lines+markers',
