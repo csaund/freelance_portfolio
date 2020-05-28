@@ -4,6 +4,7 @@ library(DT)
 library(dplyr)
 library(tidyverse)
 library(ggplot2)
+library(birk)
 
 ui <- fluidPage(
   sidebarPanel(
@@ -43,7 +44,7 @@ ui <- fluidPage(
     numericInput("y1", label="y1", value=3, step=0.1),
     dateRangeInput("lineDrawDateRange", "Date range input:", 
                    start="2018-05-19",
-                   end="2019-05-19"),
+                   end="2019-05-17"),
     actionButton("addLine", "Add Line From Dates"),
     h3("Plot size settings"),
     numericInput("plot_height", label="plot height", value=200, step=10),
@@ -52,7 +53,7 @@ ui <- fluidPage(
     numericInput("k", label="k", value=2700, step=10),
     actionButton("set_plot_dimensions", "Set plot dimensions"),
     dateRangeInput("inDateRange", "Plot Range:", 
-                   start="2018-05-19",
+                   start="2018-05-16",
                    end="2019-05-19")
   ),
   mainPanel(
@@ -62,8 +63,8 @@ ui <- fluidPage(
     plotlyOutput("figs", height="auto"),
     plotlyOutput("figp", height="auto"),
     plotlyOutput("figs10", height="auto"),
-    plotlyOutput("figp10", height="auto"),
-    plotlyOutput("testPlot", height="auto")
+    plotlyOutput("figp10", height="auto")
+    # plotlyOutput("testPlot", height="auto")
   )
 )
 
@@ -99,8 +100,8 @@ server <- function(input, output, session) {
 
   # Set all reactive values
   values <- reactiveValues(shouldUpload=NULL,   # So it only uploads once
-                           j=NULL,              # value dervied from date input
-                           k=NULL,              # value dervied from date input
+                           j=0,              # value dervied from date input
+                           k=365,              # value dervied from date input
                            clicks=NULL,         # to display the last click
                            click1=NULL,         # to display P1
                            y0=NULL,    # keep track to automatically set y value
@@ -147,22 +148,10 @@ server <- function(input, output, session) {
     values$line_data_table %>%
       select('start', 'end', 'percent_diff')
   })
-  
-  j=2600
-  k=2700
-  
+
   p <- reactive({
-    print(input$inDateRange[1])
-    print(input$inDateRange[2])
-    values$j=input$j
-    values$k=input$k
-    t <- tail(w.ws, length(us10y.p$cwc$f.d5.w$us10y.f.d5.suw))   # I guess assume 
-                                                                 # that this is the latest 
-                                                                 # data from w.ws?
-    start <- which(as.Date(t$Date) == as.Date(input$inDateRange[1]))
-    finish <- which(as.Date(t$Date) == as.Date(input$inDateRange[2]))
-    print(start)
-    print(finish)
+    start <- which.closest(as.Date(w.ws$Date), as.Date(input$inDateRange[1]))
+    finish <- which.closest(as.Date(w.ws$Date),  as.Date(input$inDateRange[2]))
     values$j <- start
     values$k <- finish
     
@@ -202,8 +191,8 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   output$figp <- renderPlotly({
-    us10y.p$cwc$f.d5.w[j:k]  %>%
-      plot_ly(x=w.ws[j:k,Date],
+    us10y.p$cwc$f.d5.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
             y=~us10y.f.d5.prw,
             type='scatter',
             mode='lines+markers',
@@ -213,8 +202,8 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   output$figs10 <- renderPlotly({
-    us10y.p$cwc$f.d10.w[j:k]  %>%
-      plot_ly(x=w.ws[j:k,Date],
+    us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
             y=~us10y.f.d10.suw,
             type='scatter',
             mode='lines+markers',
@@ -224,8 +213,8 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   output$figp10 <- renderPlotly({
-    us10y.p$cwc$f.d10.w[j:k]  %>%
-      plot_ly(x=w.ws[j:k,Date],
+    us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
             y=~us10y.f.d10.prw,type='scatter',
             mode='lines+markers',
             width = values$plot_width, height = values$plot_height) %>%
@@ -234,25 +223,25 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   
-  t <- reactive({
-    p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
-      plot_ly(x=w.ws[values$j:values$k,Date],
-              y=~us10y.f.d5.suw,
-              type='scatter',
-              mode='lines+markers') %>%
-      layout(
-        shapes=values$slines) 
-    return(p)
-  })
+  #t <- reactive({
+  #  p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
+  #    plot_ly(x=w.ws[values$j:values$k,Date],
+  #            y=~us10y.f.d5.suw,
+  #            type='scatter',
+  #            mode='lines+markers') %>%
+  #    layout(
+  #      shapes=values$slines) 
+  #  return(p)
+  #})
   
-  output$testPlot <- renderPlotly({
-    subplot(t(), t(), t(), t(), plot_ly(), 
-            nrows = 4, 
-            margin = 0.0, 
-            heights = c(0.25, 0.25, 0.25, 0.25),
-            shareX = TRUE,
-            which_layout = "merge")
-  })
+  #output$testPlot <- renderPlotly({
+  #  subplot(t(), t(), t(), t(), plot_ly(), 
+  #          nrows = 4, 
+  #          margin = 0.0, 
+  #          heights = c(0.25, 0.25, 0.25, 0.25),
+  #          shareX = TRUE,
+  #          which_layout = "merge")
+  #})
   
   # Observe events from input buttons
   output$clicks <- renderPrint({
