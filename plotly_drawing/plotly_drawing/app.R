@@ -7,16 +7,9 @@ library(ggplot2)
 library(birk)
 
 ui <- fluidPage(
+  fluidRow(
+  ),
   sidebarPanel(
-    h3('Load lines into plot'),
-    fileInput("inputLineFile", "Choose CSV File",
-              accept = c(
-                "text/csv",
-                "text/comma-separated-values,text/plain",
-                ".csv")
-    ),
-    actionButton("up","Upload"),
-    br(),
     h3('Draw lines:'),
     selectInput("plot_line", "on plot:",
                 c("Default" = "default",
@@ -45,19 +38,45 @@ ui <- fluidPage(
     dateRangeInput("lineDrawDateRange", "Date range input:", 
                    start="2018-05-19",
                    end="2019-05-17"),
-    actionButton("addLine", "Add Line From Dates"),
-    h3("Plot size settings"),
-    numericInput("plot_height", label="plot height", value=200, step=10),
-    numericInput("plot_width", label="plot width", value=400, step=10),
-    numericInput("j", label="j", value=2600, step=10),
-    numericInput("k", label="k", value=2700, step=10),
-    actionButton("set_plot_dimensions", "Set plot dimensions"),
-    dateRangeInput("inDateRange", "Plot Range:", 
-                   start="2018-05-16",
-                   end="2019-05-19")
+    actionButton("addLine", "Add Line From Dates")
   ),
   mainPanel(
-    downloadButton("downloadData", "Download Line Data"),
+    fluidRow(
+      column(12,
+             h3("Plot size settings"),
+             column(3, 
+                    numericInput("plot_height", label="plot height", value=200, step=10)
+                    ),
+             column(3, 
+                    numericInput("plot_width", label="plot width", value=600, step=10)
+             ),
+             column(6, 
+                    dateRangeInput("inDateRange", "Plot Range:", 
+                                   start="2018-05-16",
+                                   end="2019-05-19")
+             ),
+             actionButton("set_plot_dimensions", "Set plot dimensions")
+      )
+    ),
+    fluidRow(
+      column(12,
+             h3('Load lines into plot'),
+             column(6, 
+                    fileInput("inputLineFile", "Choose CSV File",
+                              accept = c(
+                                "text/csv",
+                                "text/comma-separated-values,text/plain",
+                                ".csv")
+                    )
+             ),
+             column(2, 
+                    actionButton("up","Upload")
+             ),
+             column(4,
+                    downloadButton("downloadData", "Download Line Data")
+             )
+      )
+    ),
     plotlyOutput("p", height="auto"),
     # DT::dataTableOutput("p_line_table"),
     plotlyOutput("figs", height="auto"),
