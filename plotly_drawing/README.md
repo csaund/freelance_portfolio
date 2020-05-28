@@ -7,7 +7,13 @@ Stretch:
 - :white_check_mark: Use positions of line to populate and display new data table with derived value (% diff)
 - :white_check_mark: Add lines by clicking on data points and creating input/output
 - :white_check_mark: Save these lines to a dataframe that can be accessed later.
-- :white_check_mark: Load lines from a dataframe that can be pre-drawn on the plotly object. 
+- :white_check_mark: Load lines from a dataframe that can be pre-drawn on the plotly object.
+
+Additions:
+- :white_check_mark: Sync all plots to have same date range
+- :white_check_mark: Dynamically resize plots on input
+- :white_check_mark: Automatically set y value from plot click
+- :radio_button: Add spike that cuts across all plots
 
 To run: 
 - Download and navigate into /plotly_drawing folder (where app.R lives)
