@@ -43,19 +43,19 @@ ui <- fluidPage(
   mainPanel(
     fluidRow(
       column(12,
-             h3("Plot size settings"),
-             column(3, 
-                    numericInput("plot_height", label="plot height", value=200, step=10)
-                    ),
-             column(3, 
-                    numericInput("plot_width", label="plot width", value=600, step=10)
-             ),
-             column(6, 
+             #h3("Plot size settings"),
+             #column(3, 
+             #        numericInput("plot_height", label="plot height", value=200, step=10)
+             #        ),
+             #column(3, 
+             #       numericInput("plot_width", label="plot width", value=600, step=10)
+             #),
+             column(12, 
                     dateRangeInput("inDateRange", "Plot Range:", 
                                    start="2018-05-16",
                                    end="2019-05-19")
-             ),
-             actionButton("set_plot_dimensions", "Set plot dimensions")
+             )
+             #actionButton("set_plot_dimensions", "Set plot dimensions")
       )
     ),
     fluidRow(
@@ -77,13 +77,7 @@ ui <- fluidPage(
              )
       )
     ),
-    #plotlyOutput("p", height="auto"),
-    # DT::dataTableOutput("p_line_table"),
-    #plotlyOutput("figs", height="auto"),
-    #plotlyOutput("figp", height="auto"),
-    #plotlyOutput("figs10", height="auto"),
-    #plotlyOutput("figp10", height="auto"),
-    plotlyOutput("testPlot", height="800px")
+    plotlyOutput("combinedPlots", height="800px")
   )
 )
 
@@ -158,15 +152,6 @@ server <- function(input, output, session) {
   values$clicks <- reactive({
     event_data('plotly_click')
   })
-  
-  # Table and plot outputs
-  output$p_line_table <- DT::renderDataTable({
-    if(nrow(values$line_data_table)==0) {
-      return(NULL)
-    }
-    values$line_data_table %>%
-      select('start', 'end', 'percent_diff')
-  })
 
   p <- reactive({
     start <- which.closest(as.Date(w.ws$Date), as.Date(input$inDateRange[1]))
@@ -184,66 +169,7 @@ server <- function(input, output, session) {
     }
   })
   
-  output$p <- renderPlotly({
-    plot_ly(p(), 
-            x=~Date,
-            type='candlestick',
-            open=~Open,
-            high=~High,
-            low=~Low,
-            close=~Settle,
-            width = values$plot_width, height = values$plot_height) %>%
-      layout(
-        shapes = values$lines) %>%
-      config(editable = TRUE)
-  })
-
-  output$figs <- renderPlotly({
-    us10y.p$cwc$f.d5.w[values$j:values$k] %>%
-      plot_ly(x=w.ws[values$j:values$k,Date],
-            y=~us10y.f.d5.suw,
-            type='scatter',
-            mode='lines+markers',
-            width = values$plot_width, height = values$plot_height) %>%
-      layout(
-        shapes=values$slines) %>%
-      config(editable=TRUE)
-  })
-  output$figp <- renderPlotly({
-    us10y.p$cwc$f.d5.w[values$j:values$k]  %>%
-      plot_ly(x=w.ws[values$j:values$k,Date],
-            y=~us10y.f.d5.prw,
-            type='scatter',
-            mode='lines+markers',
-            width = values$plot_width, height = values$plot_height) %>%
-      layout(
-        shapes=values$plines) %>%
-      config(editable=TRUE)
-  })
-  output$figs10 <- renderPlotly({
-    us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
-      plot_ly(x=w.ws[values$j:values$k,Date],
-            y=~us10y.f.d10.suw,
-            type='scatter',
-            mode='lines+markers',
-            width = values$plot_width, height = values$plot_height) %>%
-      layout(
-        shapes=values$s10lines) %>%
-      config(editable=TRUE)
-  })
-  output$figp10 <- renderPlotly({
-    us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
-      plot_ly(x=w.ws[values$j:values$k,Date],
-            y=~us10y.f.d10.prw,type='scatter',
-            mode='lines+markers',
-            width = values$plot_width, height = values$plot_height) %>%
-      layout(
-        shapes=values$p10lines) %>%
-      config(editable=TRUE)
-  })
-  
-  big_t <- reactive({
-    print("BIG T!")
+  main_plot <- reactive({
     b <- plot_ly(p(), 
               x=~Date,
               type='candlestick',
@@ -257,8 +183,7 @@ server <- function(input, output, session) {
     return(b)
   })
   
-  t <- reactive({
-    print("little T")
+  s <- reactive({
     p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
       plot_ly(x=w.ws[values$j:values$k,Date],
               y=~us10y.f.d5.suw,
@@ -268,11 +193,41 @@ server <- function(input, output, session) {
         shapes=values$slines) 
     return(p)
   })
+  fp <- reactive({
+    p <- us10y.p$cwc$f.d5.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
+              y=~us10y.f.d5.prw,
+              type='scatter',
+              mode='lines+markers') %>%
+      layout(
+        shapes=values$plines)
+    return(p)
+  })
+  s10 <- reactive({
+    p <- us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
+              y=~us10y.f.d10.suw,
+              type='scatter',
+              mode='lines+markers') %>%
+      layout(
+        shapes=values$s10lines)
+    return(p)
+  })
+  p10 <- reactive({
+    p <- us10y.p$cwc$f.d10.w[values$j:values$k]  %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
+              y=~us10y.f.d10.prw,type='scatter',
+              mode='lines+markers') %>%
+      layout(
+        shapes=values$p10lines)
+    return(p)
+  })
   
-  output$testPlot <- renderPlotly({
-    subplot(big_t(), t(), t(), t(), t(),
+  
+  output$combinedPlots <- renderPlotly({
+    subplot(main_plot(), s(), fp(), s10(), p10(),
             nrows = 5, 
-            margin =0.05, 
+            margin =0.01, 
             heights = c(0.2, 0.2, 0.2, 0.2, 0.2),
             shareX = TRUE,
             shareY=FALSE,
@@ -306,15 +261,24 @@ server <- function(input, output, session) {
     res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
     values$y0 <- res$Settle
     values$click1 <- values$lastClick
+    print(values$click1)
+    print(typeof(values$click1))
+    if('y' %in% names(values$click1)) {
+      values$y0 = values$click1[['y']]
+    }
   })
   
   observeEvent(input$setP2, {
     res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
     values$y1 <- res$Settle
     values$click2 <- values$lastClick
+    if('y' %in% names(values$click2)) {
+      values$y1 = values$click2[['y']]
+    }
   })
   
   observeEvent(input$addLineClick, {
+    print(values$click1)
     if (is.null(values$click1[['x']])) {
       return(NULL)
     }
