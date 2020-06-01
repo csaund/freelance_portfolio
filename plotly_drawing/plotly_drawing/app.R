@@ -77,13 +77,13 @@ ui <- fluidPage(
              )
       )
     ),
-    plotlyOutput("p", height="auto"),
+    #plotlyOutput("p", height="auto"),
     # DT::dataTableOutput("p_line_table"),
-    plotlyOutput("figs", height="auto"),
-    plotlyOutput("figp", height="auto"),
-    plotlyOutput("figs10", height="auto"),
-    plotlyOutput("figp10", height="auto")
-    # plotlyOutput("testPlot", height="auto")
+    #plotlyOutput("figs", height="auto"),
+    #plotlyOutput("figp", height="auto"),
+    #plotlyOutput("figs10", height="auto"),
+    #plotlyOutput("figp10", height="auto"),
+    plotlyOutput("testPlot", height="800px")
   )
 )
 
@@ -242,25 +242,43 @@ server <- function(input, output, session) {
       config(editable=TRUE)
   })
   
-  #t <- reactive({
-  #  p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
-  #    plot_ly(x=w.ws[values$j:values$k,Date],
-  #            y=~us10y.f.d5.suw,
-  #            type='scatter',
-  #            mode='lines+markers') %>%
-  #    layout(
-  #      shapes=values$slines) 
-  #  return(p)
-  #})
+  big_t <- reactive({
+    print("BIG T!")
+    b <- plot_ly(p(), 
+              x=~Date,
+              type='candlestick',
+              open=~Open,
+              high=~High,
+              low=~Low,
+              close=~Settle,
+              width = values$plot_width) %>%
+        layout(
+          shapes = values$lines)
+    return(b)
+  })
   
-  #output$testPlot <- renderPlotly({
-  #  subplot(t(), t(), t(), t(), plot_ly(), 
-  #          nrows = 4, 
-  #          margin = 0.0, 
-  #          heights = c(0.25, 0.25, 0.25, 0.25),
-  #          shareX = TRUE,
-  #          which_layout = "merge")
-  #})
+  t <- reactive({
+    print("little T")
+    p <- us10y.p$cwc$f.d5.w[values$j:values$k] %>%
+      plot_ly(x=w.ws[values$j:values$k,Date],
+              y=~us10y.f.d5.suw,
+              type='scatter',
+              mode='lines+markers') %>%
+      layout(
+        shapes=values$slines) 
+    return(p)
+  })
+  
+  output$testPlot <- renderPlotly({
+    subplot(big_t(), t(), t(), t(), t(),
+            nrows = 5, 
+            margin =0.05, 
+            heights = c(0.2, 0.2, 0.2, 0.2, 0.2),
+            shareX = TRUE,
+            shareY=FALSE,
+            titleY=TRUE,
+            which_layout = "merge")
+  })
   
   # Observe events from input buttons
   output$clicks <- renderPrint({
