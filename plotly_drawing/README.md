@@ -13,7 +13,7 @@ Additions:
 - :white_check_mark: Sync all plots to have same date range
 - :white_check_mark: Dynamically resize plots on input
 - :white_check_mark: Automatically set y value from plot click
-- :radio_button: Add spike that cuts across all plots
+- :white_check_mark: Sync subplots to share X axis and spike across all plots
 
 To run: 
 - Download and navigate into /plotly_drawing folder (where app.R lives)
