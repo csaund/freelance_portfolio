@@ -12,11 +12,11 @@ ui <- fluidPage(
   sidebarPanel(
     h3('Draw lines:'),
     selectInput("plot_line", "on plot:",
-                c("Default" = "default",
-                  "S" = "s",
-                  "P" = "p",
-                  "S10Y" = "s10y",
-                  "P10Y" = "p10y"),
+                c("Default" = 0,
+                  "S" = 1,
+                  "P" = 2,
+                  "S10Y" = 3,
+                  "P10Y" = 4),
                 selected="Default"),
     selectInput("line_color", "Line Color:",
                 c("Green" = "green",
@@ -119,6 +119,7 @@ server <- function(input, output, session) {
                            click1=NULL,         # to display P1
                            y0=NULL,    # keep track to automatically set y value
                            y1=NULL,    # on point click
+                           curve=NULL,
                            click2=NULL,         # to display P2
                            lastClick=NULL,      # to keep track of the last click
                            lines=list(),        # lines for default plot
@@ -176,8 +177,7 @@ server <- function(input, output, session) {
               open=~Open,
               high=~High,
               low=~Low,
-              close=~Settle,
-              width = values$plot_width) %>%
+              close=~Settle) %>%
         layout(
           shapes = values$lines)
     return(b)
@@ -258,27 +258,31 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$setP1, {
-    res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
-    values$y0 <- res$Settle
     values$click1 <- values$lastClick
-    print(values$click1)
-    print(typeof(values$click1))
-    if('y' %in% names(values$click1)) {
+    if(values$click1[['curveNumber']] == 0) {
+      res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
+      values$y0 <- res$Settle
+    }
+    else {
       values$y0 = values$click1[['y']]
     }
+    values$curve = values$click1[['curveNumber']]
   })
   
   observeEvent(input$setP2, {
-    res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
-    values$y1 <- res$Settle
     values$click2 <- values$lastClick
-    if('y' %in% names(values$click2)) {
+    if(values$click2[['curveNumber']] == 0) {
+      res <- filter(w.ws, as.Date(Date) == as.Date(values$lastClick$x))
+      values$y1 <- res$Settle
+    }
+    else {
       values$y1 = values$click2[['y']]
     }
+    # TODO make sure this is the same.
+    # validate(values$click1[['curveNumber']] == values$curve)
   })
   
   observeEvent(input$addLineClick, {
-    print(values$click1)
     if (is.null(values$click1[['x']])) {
       return(NULL)
     }
@@ -288,11 +292,12 @@ server <- function(input, output, session) {
       values$y0,
       values$y1,
       input$line_color,
-      input$plot_line)
+      values$curve)
     values$click1 <- NULL
     values$click2 <- NULL
     values$y0 <- NULL
     values$y1 <- NULL
+    values$curve <- NULL
   })
   
   # Add line to reactive values
@@ -305,23 +310,23 @@ server <- function(input, output, session) {
       y1 = ye,
       xref='x',yref='y',
       line=list(color=col,width=0.5))
-    if(plot_to_add=='default') {
+    if(plot_to_add==0) {
       i <- length(values$lines)+1
       values$lines[[i]] <- li      
     }
-    else if(plot_to_add=='s') {
+    else if(plot_to_add==1) {
       i <- length(values$slines)+1
       values$slines[[i]] <- li      
     }
-    else if(plot_to_add=='p') {
+    else if(plot_to_add==2) {
       i <- length(values$plines)+1
       values$plines[[i]] <- li      
     }
-    else if(plot_to_add=='s10y') {
+    else if(plot_to_add==3) {
       i <- length(values$s10lines)+1
       values$s10lines[[i]] <- li      
     }
-    else if(plot_to_add=='p10y') {
+    else if(plot_to_add==4) {
       i <- length(values$p10lines)+1
       values$p10lines[[i]] <- li      
     }
